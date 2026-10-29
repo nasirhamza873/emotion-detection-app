@@ -8,7 +8,6 @@ from PIL import Image
 st.title("😊 Emotion Recognition App")
 st.write("Loading model, please wait...")
 
-# 1. Zip file extraction and model loading
 @st.cache_resource
 def load_my_model():
     if not os.path.exists('best_model.keras') and os.path.exists('best_model.zip'):
@@ -26,23 +25,25 @@ except Exception as e:
 
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
-# 2. User Image Uploader UI
 uploaded_file = st.file_uploader("Upload a close-up face image to check emotion:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Convert image back to Grayscale (1 channel) for FER-2013 model
     image = Image.open(uploaded_file).convert('L') 
     st.image(image, caption='Uploaded Image', width=150)
     
-    # Preprocessing for Grayscale model input (48x48x1)
+    # Preprocessing: Resizing and Normalizing just like training
     image_resized = image.resize((48, 48))
-    img_array = np.array(image_resized) / 255.0
+    img_array = np.array(image_resized, dtype=np.float32) / 255.0
     img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48)
     img_array = np.expand_dims(img_array, axis=-1) # Shape: (1, 48, 48, 1)
     
     if st.button('Predict Emotion'):
         with st.spinner('Analyzing emotion...'):
             prediction = model.predict(img_array)
+            
+            # Print raw prediction array to see what model is outputting
+            st.write("Raw Model Output:", prediction)
+            
             max_index = int(np.argmax(prediction))
             predicted_emotion = emotion_labels[max_index]
             confidence = float(np.max(prediction)) * 100
