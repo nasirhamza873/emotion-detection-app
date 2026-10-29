@@ -2,6 +2,7 @@ import streamlit as st
 import tensorflow as tf
 import zipfile
 import os
+import numpy as np
 from PIL import Image
 
 st.title("😊 Emotion Recognition App")
@@ -25,12 +26,28 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
+# FER-2013 dataset emotions classes
+emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+
 # 2. User Image Uploader UI
 uploaded_file = st.file_uploader("Upload an image to check emotion:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert('L') # Grayscale for FER-2013 dataset
-    image_resized = image.resize((48, 48)) # Resizing according to model requirement
+    image = Image.open(uploaded_file).convert('L') # Grayscale for FER-2013
     st.image(image, caption='Uploaded Image', width=150)
     
-    st.write("Image received successfully! Prediction will be displayed here.")
+    # Preprocessing the image for the model
+    image_resized = image.resize((48, 48)) # FER-2013 standard size
+    img_array = np.array(image_resized) / 255.0 # Normalization
+    img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48)
+    img_array = np.expand_dims(img_array, axis=-1) # Shape: (1, 48, 48, 1)
+    
+    # Prediction button
+    if st.button('Predict Emotion'):
+        with st.spinner('Analyzing emotion...'):
+            prediction = model.predict(img_array)
+            max_index = int(np.argmax(prediction))
+            predicted_emotion = emotion_labels[max_index]
+            confidence = float(np.max(prediction)) * 100
+            
+            st.success(f"Predicted Emotion: **{predicted_emotion}** ({confidence:.2f}%)")
