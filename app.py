@@ -15,34 +15,30 @@ def load_my_model():
         with zipfile.ZipFile('best_model.zip', 'r') as zip_ref:
             zip_ref.extractall('.')
     
-    # Load model
     model = tf.keras.models.load_model('best_model.keras')
     return model
 
-# Loading model
 try:
     model = load_my_model()
     st.success("Model loaded successfully!")
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
-# Correct alphabetical order for FER-2013 dataset
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 # 2. User Image Uploader UI
 uploaded_file = st.file_uploader("Upload a close-up face image to check emotion:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert('L') # Grayscale for FER-2013
+    # Changed to RGB (3 channels) just in case model was trained on RGB images
+    image = Image.open(uploaded_file).convert('RGB') 
     st.image(image, caption='Uploaded Image', width=150)
     
-    # Preprocessing the image for the model
-    image_resized = image.resize((48, 48)) # FER-2013 standard size
-    img_array = np.array(image_resized) / 255.0 # Normalization
-    img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48)
-    img_array = np.expand_dims(img_array, axis=-1) # Shape: (1, 48, 48, 1)
+    # Preprocessing for RGB model input (48x48x3)
+    image_resized = image.resize((48, 48))
+    img_array = np.array(image_resized) / 255.0
+    img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48, 3)
     
-    # Prediction button
     if st.button('Predict Emotion'):
         with st.spinner('Analyzing emotion...'):
             prediction = model.predict(img_array)
@@ -52,7 +48,6 @@ if uploaded_file is not None:
             
             st.success(f"Predicted Emotion: **{predicted_emotion}** ({confidence:.2f}%)")
             
-            # Show all probabilities for debugging
             st.write("Confidence breakdown for all emotions:")
             for i, emo in enumerate(emotion_labels):
                 st.write(f"- {emo}: {float(prediction[0][i])*100:.2f}%")
