@@ -30,14 +30,15 @@ emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surpri
 uploaded_file = st.file_uploader("Upload a close-up face image to check emotion:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Changed to RGB (3 channels) just in case model was trained on RGB images
-    image = Image.open(uploaded_file).convert('RGB') 
+    # Convert image back to Grayscale (1 channel) for FER-2013 model
+    image = Image.open(uploaded_file).convert('L') 
     st.image(image, caption='Uploaded Image', width=150)
     
-    # Preprocessing for RGB model input (48x48x3)
+    # Preprocessing for Grayscale model input (48x48x1)
     image_resized = image.resize((48, 48))
     img_array = np.array(image_resized) / 255.0
-    img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48, 3)
+    img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48)
+    img_array = np.expand_dims(img_array, axis=-1) # Shape: (1, 48, 48, 1)
     
     if st.button('Predict Emotion'):
         with st.spinner('Analyzing emotion...'):
