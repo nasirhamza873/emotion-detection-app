@@ -26,11 +26,11 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
-# FER-2013 dataset emotions classes
-emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+# Correct alphabetical order for FER-2013 dataset
+emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 # 2. User Image Uploader UI
-uploaded_file = st.file_uploader("Upload an image to check emotion:", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload a close-up face image to check emotion:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('L') # Grayscale for FER-2013
@@ -51,3 +51,8 @@ if uploaded_file is not None:
             confidence = float(np.max(prediction)) * 100
             
             st.success(f"Predicted Emotion: **{predicted_emotion}** ({confidence:.2f}%)")
+            
+            # Show all probabilities for debugging
+            st.write("Confidence breakdown for all emotions:")
+            for i, emo in enumerate(emotion_labels):
+                st.write(f"- {emo}: {float(prediction[0][i])*100:.2f}%")
