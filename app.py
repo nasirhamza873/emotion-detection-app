@@ -24,6 +24,7 @@ try:
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
+# Standard alphabetical order for FER-2013 dataset classes
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 # 2. Choice between File Upload and Live Camera
@@ -37,11 +38,10 @@ else:
     uploaded_file = st.camera_input("Take a picture using your camera")
 
 if uploaded_file is not None:
-    # Convert to Grayscale (1 channel) for FER-2013 model
     image = Image.open(uploaded_file).convert('L') 
     st.image(image, caption='Selected Image', width=150)
     
-    # Preprocessing (using raw pixels format that gave accurate results)
+    # Preprocessing (using raw pixels format 0-255)
     image_resized = image.resize((48, 48))
     img_array = np.array(image_resized, dtype=np.float32)
     img_array = np.expand_dims(img_array, axis=0) # Shape: (1, 48, 48)
@@ -57,6 +57,7 @@ if uploaded_file is not None:
             
             st.success(f"Predicted Emotion: **{predicted_emotion}** ({confidence:.2f}%)")
             
+            # Detailed breakdown to see all indices clearly
             st.write("Confidence breakdown for all emotions:")
             for i, emo in enumerate(emotion_labels):
-                st.write(f"- {emo}: {float(prediction[0][i])*100:.2f}%")
+                st.write(f"Index {i} ({emo}): {float(prediction[0][i])*100:.2f}%")
